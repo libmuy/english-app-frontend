@@ -43,7 +43,6 @@ class LearningProvider {
   // ======================================================
   Future<Category> fetchCategory(int? categoryId) async {
     final token = _authProvider.token;
-    if (token == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/get_category.php'),
@@ -72,7 +71,6 @@ class LearningProvider {
   // ======================================================
   Future<Course> fetchCourse(int courseId) async {
     final token = _authProvider.token;
-    if (token == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/get_course.php'),
@@ -102,7 +100,6 @@ class LearningProvider {
   // ======================================================
   Future<Uint8List> fetchAudio(int episodeId) async {
     final token = _authProvider.token;
-    if (token == null) throw NotLoginError();
 
     // Check if the audio is already cached
     if (_audioCache.containsKey(episodeId)) {
@@ -138,8 +135,6 @@ class LearningProvider {
       fetchFavoriteResource() async {
     if (_favResourceCache != null) return _favResourceCache!;
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/get_favorite_resource.php'),
@@ -147,9 +142,6 @@ class LearningProvider {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'user_id': userId,
-      }),
     );
 
     Map<String, dynamic> data = jsonDecode(response.body);
@@ -181,10 +173,8 @@ class LearningProvider {
   // ======================================================
   Future<List<FavoriteList>> fetchFavoriteLists() async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
 
     _log.debug('fetch favorite list');
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/get_favorite_list.php'),
@@ -192,7 +182,6 @@ class LearningProvider {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'user_id': userId}),
     );
 
     final data = jsonDecode(response.body);
@@ -213,13 +202,10 @@ class LearningProvider {
   Future<SentenceFetchResult> fetchSentences(SentenceSource src,
       {int pageSize = kSentencePageSize, int offset = 0}) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-    if (token == null || userId == null) throw NotLoginError();
 
     if (_sentenceCache.containsKey(src)) return _sentenceCache[src]!;
 
     final srcData = src.toJson();
-    srcData['user_id'] = userId;
     srcData['page_size'] = pageSize;
     srcData['offset'] = offset;
 
@@ -252,8 +238,6 @@ class LearningProvider {
   Future<SentenceFetchResult> fetchReviewSentences(
       {int pageSize = kSentencePageSize, int offset = 0}) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/get_review_sentence.php'),
@@ -262,7 +246,6 @@ class LearningProvider {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        'user_id': userId,
         'page_size': pageSize,
         'offset': offset,
       }),
@@ -284,10 +267,7 @@ class LearningProvider {
   // ======================================================
   Future<List<History>> fetchHistory() async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
     _log.debug('fetch history, count:$kHistoryCount');
-
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/get_history.php'),
@@ -295,9 +275,6 @@ class LearningProvider {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'user_id': userId,
-      }),
     );
 
     final data = jsonDecode(response.body);
@@ -314,10 +291,8 @@ class LearningProvider {
   // ======================================================
   Future<String> fetchDescription(int episodeId, int sentenceIdx) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
 
     _log.debug('fetch desc');
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/get_desc.php'),
@@ -342,10 +317,7 @@ class LearningProvider {
   // ======================================================
   Future<LearningData?> fetchLearningData(int sentenceId) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-
     _log.debug('fetch Learning Data');
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/get_learning_data.php'),
@@ -353,7 +325,7 @@ class LearningProvider {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'user_id': userId, 'sentence_id': sentenceId}),
+      body: jsonEncode({'sentence_id': sentenceId}),
     );
 
     if (response.statusCode == 404) {
@@ -374,10 +346,7 @@ class LearningProvider {
   // ======================================================
   Future<int> fetchReviewSentenceCount() async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-
     _log.debug('fetch Learning Data');
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/get_review_sentence_count.php'),
@@ -385,7 +354,6 @@ class LearningProvider {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'user_id': userId}),
     );
 
     final data = jsonDecode(response.body);
@@ -402,8 +370,6 @@ class LearningProvider {
   // ======================================================
   Future<void> updateFavoriteResource(ResourceEntity entity, bool fav) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/update_favorite_resource.php'),
@@ -412,7 +378,6 @@ class LearningProvider {
         'Content-Type': 'application/json',
       },
       body: jsonEncode(<String, dynamic>{
-        'user_id': userId,
         'resource_type': entity.type.toString(),
         'resource_id': entity.id,
         'fav': fav,
@@ -437,8 +402,6 @@ class LearningProvider {
   // ======================================================
   Future<int> addFavoriteList(String name) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/add_favorite_list.php'),
@@ -447,7 +410,6 @@ class LearningProvider {
         'Content-Type': 'application/json',
       },
       body: jsonEncode(<String, dynamic>{
-        'user_id': userId,
         'name': name,
       }),
     );
@@ -466,8 +428,6 @@ class LearningProvider {
   // ======================================================
   Future<void> updateFavoriteList(int listId, String name) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/update_favorite_list.php'),
@@ -476,7 +436,6 @@ class LearningProvider {
         'Content-Type': 'application/json',
       },
       body: jsonEncode(<String, dynamic>{
-        'user_id': userId,
         'list_id': listId,
         'name': name,
       }),
@@ -494,8 +453,6 @@ class LearningProvider {
   // ======================================================
   Future<void> deleteFavoriteList(int listId) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/update_favorite_list.php'),
@@ -504,7 +461,6 @@ class LearningProvider {
         'Content-Type': 'application/json',
       },
       body: jsonEncode(<String, dynamic>{
-        'user_id': userId,
         'list_id': listId,
       }),
     );
@@ -522,8 +478,6 @@ class LearningProvider {
   Future<void> updateFavoriteSentence(
       int favoriteListId, Sentence sentence, bool fav) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/update_favorite_sentence.php'),
@@ -532,7 +486,6 @@ class LearningProvider {
         'Content-Type': 'application/json',
       },
       body: jsonEncode(<String, dynamic>{
-        'user_id': userId,
         'favorite_list_id': favoriteListId,
         'sentence_id': sentence.id,
         'fav': fav,
@@ -583,12 +536,9 @@ class LearningProvider {
   // ======================================================
   Future<void> updateHistory(History history) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
     _log.debug('update history, count:$kHistoryCount');
-    if (token == null || userId == null) throw NotLoginError();
 
     final args = history.toJson();
-    args['user_id'] = userId;
 
     if (history.src.type == SentenceSourceType.episode &&
         history.audioLenth == null) {
@@ -619,11 +569,9 @@ class LearningProvider {
   Future<void> removeHistory(
       {SentenceSource? src, bool removeAll = false}) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
     Map<String, dynamic> args;
 
     _log.debug('remove history');
-    if (token == null || userId == null) throw NotLoginError();
 
     if (removeAll) {
       args = {};
@@ -632,8 +580,6 @@ class LearningProvider {
       if (src == null) throw ArgumentError.notNull('src');
       args = src.toJson();
     }
-
-    args['user_id'] = userId;
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/remove_history.php'),
@@ -656,13 +602,9 @@ class LearningProvider {
   // ======================================================
   Future<void> updateLearningData(LearningData data) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
     final json = data.toJson();
 
-    json['user_id'] = userId;
-
     _log.debug('update Learning Data');
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/update_learning_data.php'),
@@ -685,10 +627,8 @@ class LearningProvider {
   // ======================================================
   Future<void> reviewSentence(int sentenceId, ReviewResult reviewResult) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
 
     _log.debug('review Sentence');
-    if (token == null || userId == null) throw NotLoginError();
 
     final response = await http.post(
       Uri.parse('$kUrlPrefix/review_sentence.php'),
@@ -697,7 +637,6 @@ class LearningProvider {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        'user_id': userId,
         'sentence_id': sentenceId,
         'review_result': reviewResult.toString(),
       }),

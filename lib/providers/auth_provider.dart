@@ -16,14 +16,15 @@ class AuthProvider {
   ValueNotifier<bool> get isLoggedInNotifier => _isLoggedInNotifier;
   String? _token;
   String? _email;
-  int? _userId;
   String? _userName;
   String? _nonce;
   DateTime? _expiryDate;
 
-  String? get token => _token;
+  String get token {
+    if (_token == null) throw NotLoginError();
+    return _token!;
+  }
   String? get email => _email;
-  int? get userId => _userId;
   String? get userName => _userName;
   bool get isLoggedIn => _isLoggedInNotifier.value;
 
@@ -31,7 +32,6 @@ class AuthProvider {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', _token ?? '');
     await prefs.setString('userName', _userName ?? '');
-    await prefs.setInt('userId', _userId ?? -1);
     await prefs.setString('email', _email ?? '');
     await prefs.setString('nonce', _nonce ?? '');
     await prefs.setString('expiryDate', _expiryDate?.toIso8601String() ?? '');
@@ -40,7 +40,6 @@ class AuthProvider {
   Future<void> _loadFromPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('token');
-    _userId = prefs.getInt('userId');
     _userName = prefs.getString('userName');
     _email = prefs.getString('email');
     _nonce = prefs.getString('nonce');
@@ -89,7 +88,6 @@ class AuthProvider {
     _userName = userName;
     _token = data['token'];
     _email = data['email'];
-    _userId = data['user_id'];
     _userName = data['user_name'];
     _expiryDate = DateTime.now().add(_kExpiryDuration);
     await _saveToPreferences();
@@ -119,7 +117,6 @@ class AuthProvider {
     _token = data['token'];
     _email = data['email'];
     _userName = data['user_name'];
-    _userId = data['user_id'];
     _expiryDate = DateTime.now().add(_kExpiryDuration);
     await _saveToPreferences();
     _isLoggedInNotifier.value = true;
@@ -129,9 +126,6 @@ class AuthProvider {
   }
 
   Future<void> updateUser(String newPasswod, String newEmail) async {
-    final token = _token;
-    if (token == null) throw NotLoginError();
-
     final resp = await http.post(
       Uri.parse('$kUrlPrefix/user/update.php'),
       headers: <String, String>{

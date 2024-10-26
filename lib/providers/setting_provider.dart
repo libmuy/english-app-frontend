@@ -65,9 +65,6 @@ class SettingProvider {
 
   Future<void> saveSettings({bool forceAll = false}) async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
-
-    if (token == null || userId == null) throw NotLoginError();
 
     final newSettings = settings.toJson();
     final syncedSettings = _syncedSettings.toJson();
@@ -80,7 +77,6 @@ class SettingProvider {
     }
     if (newSettings.keys.isEmpty) return;
 
-    newSettings['user_id'] = userId;
     final json = jsonEncode(newSettings);
     final response = await http.post(
       Uri.parse('$kUrlPrefix/save_setting.php'),
@@ -100,10 +96,7 @@ class SettingProvider {
 
   Future<void> loadSettings() async {
     final token = _authProvider.token;
-    final userId = _authProvider.userId;
     _log.debug('loadSettings');
-
-    if (token == null || userId == null) throw NotLoginError();
 
     _log.debug('  send request with auth header');
     final response = await http.post(
@@ -112,9 +105,6 @@ class SettingProvider {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'user_id': userId,
-      }),
     );
 
     final Map<String, dynamic> json = jsonDecode(response.body);
