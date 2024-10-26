@@ -29,9 +29,11 @@ This app is just a tool. The important points are:
 
 ## The App Structure
 
+```txt
 Frontend  ------------------------- Backend
    |                                  |
 Flutter Web                    PHP + MySQL + Nginx
+```
 
 ## Features
 
