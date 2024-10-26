@@ -1,0 +1,51 @@
+name: libmuyenglish
+description: "A English Learning App"
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+environment:
+  sdk: '>=3.3.4 <4.0.0'
+
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.6
+  http: ^1.2.1
+  shared_preferences: ^2.2.3
+  provider: ^6.1.2
+  flutter_secure_storage: ^9.2.2
+  crypto: ^3.0.3
+  flutter_quill: ">=9.4.6"
+  flutter_markdown: ^0.7.3
+  # just_audio: ^0.9.39
+  libmuy_audioplayer:
+    path: ./libmuy_audioplayer
+  get_it: ^7.7.0
+  flutter_colorpicker: ^1.1.0
+  simple_logging: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ">=3.0.0"
+
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+
+  fonts:
+    - family: Mallanna
+      fonts:
+        - asset: assets/fonts/Mallanna-Regular.ttf
+    - family: AlibabaHealth
+      fonts:
+        - asset: assets/fonts/AlibabaHealthFont2.0CN-45R.ttf
