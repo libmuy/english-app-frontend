@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:libmuyenglish/domain/entities.dart';
 import 'package:libmuyenglish/providers/history.dart';
 import '../domain/global.dart';
+import '../providers/auth_provider.dart';
 import '../utils/utils.dart';
 import '../providers/learning_provider.dart';
 import 'package:simple_logging/simple_logging.dart';
@@ -13,23 +14,23 @@ final _log = Logger('HomePage', level: LogLevel.debug);
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  Future<(Map<ResourceType, List<ResourceEntity>>, List<History>, int)>
+  Future<(Map<ResourceType, List<ResourceEntity>>, List<History>, ReviewInfo)>
       _getDisplayData() async {
     final learningProvider = getIt<LearningProvider>();
     final historyMgr = getIt<HistoryManager>();
     final historyFuture = historyMgr.loadHistory();
     final favoriteFuture = learningProvider.fetchFavoriteResource();
     final reviewSentenceCountFuture =
-        learningProvider.fetchReviewSentenceCount();
+        learningProvider.fetchReviewInfo();
     final  history = await historyFuture;
     final favorite = await favoriteFuture;
-    final reviewSentenceCount = await reviewSentenceCountFuture;
+    final reviewInfo = await reviewSentenceCountFuture;
 
-    return (favorite, history, reviewSentenceCount);
+    return (favorite, history, reviewInfo);
   }
 
   _buildBody(BuildContext context, Map<ResourceType, List<ResourceEntity>> favs,
-      List<History> historyList, int reviewSentenceCount) {
+      List<History> historyList, ReviewInfo reviewInfo) {
     final categoryFav = favs[ResourceType.category];
     final courseFav = favs[ResourceType.course];
     final episodFav = favs[ResourceType.episode];
@@ -37,11 +38,17 @@ class HomePage extends StatelessWidget {
         (courseFav == null || courseFav.isEmpty) &&
         (episodFav == null || episodFav.isEmpty);
 
+    final textStyle = Theme.of(context).textTheme.titleMedium!.copyWith(color: Theme.of(context).primaryColor);
     final List<Widget> widgetList = [
-      if (reviewSentenceCount > 0)
+      Text("Hi! ${getIt<AuthProvider>().userName}",
+      style: textStyle),
+      Text("今天学习了${reviewInfo.todayLearnedCount}个句子，还有${reviewInfo.needToReviewCount}个句子需要复习。加油哦！",
+      style: textStyle),
+      const SizedBox(height: kPageTopPadding),
+      if (reviewInfo.needToReviewCount > 0)
         ...resourceListSection(context, '复习', [
           ResourceWidget(
-              res: ReviewSentences(sentenceCount: reviewSentenceCount))
+              res: ReviewSentences(sentenceCount: reviewInfo.needToReviewCount))
         ]),
       if (historyList.isNotEmpty) ...[
         const SizedBox(height: kPageTopPadding),
@@ -107,10 +114,10 @@ class HomePage extends StatelessWidget {
             return futureBuilderHelper(
                 snapshot: snapshot,
                 onDone: () {
-                  final (favs, historyList, reviewSentenceCount) =
+                  final (favs, historyList, reviewInfo) =
                       snapshot.data!;
 
-                      return _buildBody(context, favs, historyList, reviewSentenceCount);
+                      return _buildBody(context, favs, historyList, reviewInfo);
                 },
                 logger: _log,
                 logId: 'HomePage');

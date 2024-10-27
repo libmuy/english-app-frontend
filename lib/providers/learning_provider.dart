@@ -344,12 +344,12 @@ class LearningProvider {
   // ======================================================
   // 📄 fetch REVIEW SENTENCE COUNT
   // ======================================================
-  Future<int> fetchReviewSentenceCount() async {
+  Future<ReviewInfo> fetchReviewInfo() async {
     final token = _authProvider.token;
     _log.debug('fetch Learning Data');
 
     final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_review_sentence_count.php'),
+      Uri.parse('$kUrlPrefix/get_review_info.php'),
       headers: <String, String>{
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -362,7 +362,7 @@ class LearningProvider {
           error: data['error']);
     }
 
-    return data['count'];
+    return ReviewInfo.fromJson(data);
   }
 
   // ======================================================
@@ -690,5 +690,19 @@ class LearningProvider {
     if (res is Episode) {
       res.fav = isFavResource(res) ?? false;
     }
+  }
+}
+
+class ReviewInfo {
+  final int needToReviewCount;
+  final int todayLearnedCount;
+
+  ReviewInfo(this.needToReviewCount, this.todayLearnedCount);
+
+  factory ReviewInfo.fromJson(Map<String, dynamic> json) {
+    return ReviewInfo(
+      json['need_to_review_count'] as int,
+      json['today_learned_count'] as int,
+    );
   }
 }
