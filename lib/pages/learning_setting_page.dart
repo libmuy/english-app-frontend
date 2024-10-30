@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:libmuyenglish/domain/global.dart';
+import 'package:libmuyenglish/providers/auth_provider.dart';
 import '../widgets/setting_group.dart';
 import '../providers/service_locator.dart';
 import '../providers/setting_provider.dart';

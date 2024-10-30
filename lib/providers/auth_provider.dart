@@ -27,6 +27,8 @@ class AuthProvider {
   String? get email => _email;
   String? get userName => _userName;
   bool get isLoggedIn => _isLoggedInNotifier.value;
+  bool get isAdmin => true;
+  
 
   Future<void> _saveToPreferences() async {
     final prefs = await SharedPreferences.getInstance();

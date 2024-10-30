@@ -79,7 +79,7 @@ class SettingProvider {
 
     final json = jsonEncode(newSettings);
     final response = await http.post(
-      Uri.parse('$kUrlPrefix/save_setting.php'),
+      Uri.parse('$kUrlPrefix/update_setting.php'),
       headers: <String, String>{
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

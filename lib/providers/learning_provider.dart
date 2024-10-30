@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:libmuyenglish/providers/service_locator.dart';
 import 'package:libmuyenglish/utils/errors.dart';
+import 'package:libmuyenglish/utils/utils.dart';
 
 import 'package:simple_logging/simple_logging.dart';
 import 'auth_provider.dart';
@@ -42,24 +43,14 @@ class LearningProvider {
   // 📄 fetch CATEGORY
   // ======================================================
   Future<Category> fetchCategory(int? categoryId) async {
-    final token = _authProvider.token;
-
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_category.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    final response = await httpRequest(
+      'get_category.php',
       body: jsonEncode({
         'category_id': categoryId,
       }),
     );
 
     final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch Category: $categoryId', response.statusCode,
-          error: data['error']);
-    }
     final ret = Category.fromJson(data);
     await fetchFavoriteResource();
     _updateResourceFav(ret);
@@ -70,25 +61,14 @@ class LearningProvider {
   // 📄 fetch COURSE
   // ======================================================
   Future<Course> fetchCourse(int courseId) async {
-    final token = _authProvider.token;
-
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_course.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    final response = await httpRequest(
+      'get_course.php',
       body: jsonEncode({
         'course_id': courseId,
       }),
     );
 
     final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch Course: $courseId', response.statusCode,
-          error: data['error']);
-    }
-
     final ret = Course.fromJson(data);
     await fetchFavoriteResource();
     _updateResourceFav(ret);
@@ -99,27 +79,17 @@ class LearningProvider {
   // 📄 fetch AUDIO
   // ======================================================
   Future<Uint8List> fetchAudio(int episodeId) async {
-    final token = _authProvider.token;
-
     // Check if the audio is already cached
     if (_audioCache.containsKey(episodeId)) {
       return _audioCache[episodeId]!;
     }
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_audio.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    final response = await httpRequest(
+      'get_audio.php',
       body: jsonEncode({
         'episode_id': episodeId,
       }),
     );
-
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch Audio: $episodeId', response.statusCode);
-    }
 
     // Store in cache
     _addDataToCache(
@@ -134,21 +104,10 @@ class LearningProvider {
   Future<Map<ResourceType, List<ResourceEntity>>>
       fetchFavoriteResource() async {
     if (_favResourceCache != null) return _favResourceCache!;
-    final token = _authProvider.token;
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_favorite_resource.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await httpRequest('get_favorite_resource.php');
 
     Map<String, dynamic> data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch Favorite Resource', response.statusCode,
-          error: data['error']);
-    }
     Map<ResourceType, List<ResourceEntity>> ret = {};
     for (var key in ResourceType.values) {
       final keyStr = key.toString();
@@ -172,23 +131,10 @@ class LearningProvider {
   // 📄 fetch FAVORITE LIST
   // ======================================================
   Future<List<FavoriteList>> fetchFavoriteLists() async {
-    final token = _authProvider.token;
-
     _log.debug('fetch favorite list');
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_favorite_list.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
+    final response = await httpRequest('get_favorite_list.php');
     final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch Favorite List', response.statusCode,
-          error: data['error']);
-    }
     final ret = data.map<FavoriteList>((e) {
       return FavoriteList.fromJson(e);
     }).toList();
@@ -201,29 +147,17 @@ class LearningProvider {
   // ======================================================
   Future<SentenceFetchResult> fetchSentences(SentenceSource src,
       {int pageSize = kSentencePageSize, int offset = 0}) async {
-    final token = _authProvider.token;
-
     if (_sentenceCache.containsKey(src)) return _sentenceCache[src]!;
 
     final srcData = src.toJson();
     srcData['page_size'] = pageSize;
     srcData['offset'] = offset;
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_sentence.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    final response = await httpRequest(
+      'get_sentence.php',
       body: jsonEncode(srcData),
     );
-
     final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch Sentence: $src', response.statusCode,
-          error: data['error']);
-    }
-
     final ret = SentenceFetchResult.fromJson(data);
 
     // Store in cache
@@ -237,14 +171,8 @@ class LearningProvider {
   // ======================================================
   Future<SentenceFetchResult> fetchReviewSentences(
       {int pageSize = kSentencePageSize, int offset = 0}) async {
-    final token = _authProvider.token;
-
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_review_sentence.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    final response = await httpRequest(
+      'get_review_sentence.php',
       body: jsonEncode({
         'page_size': pageSize,
         'offset': offset,
@@ -256,7 +184,6 @@ class LearningProvider {
       throw HttpStatusError('Fetch Review Sentence', response.statusCode,
           error: data['error']);
     }
-
     final ret = SentenceFetchResult.fromJson(data);
 
     return ret;
@@ -266,22 +193,10 @@ class LearningProvider {
   // 📄 fetch HISTORY
   // ======================================================
   Future<List<History>> fetchHistory() async {
-    final token = _authProvider.token;
     _log.debug('fetch history, count:$kHistoryCount');
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_history.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
+    final response = await httpRequest('get_history.php');
     final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch History', response.statusCode,
-          error: data['error']);
-    }
     if (data.isEmpty) return [];
     return data.map<History>((json) => History.fromJson(json)).toList();
   }
@@ -289,55 +204,37 @@ class LearningProvider {
   // ======================================================
   // 📄 fetch DESCRIPTION
   // ======================================================
-  Future<String> fetchDescription(int episodeId, int sentenceIdx) async {
-    final token = _authProvider.token;
-
+  Future<String?> fetchDescription(int sentenceId) async {
     _log.debug('fetch desc');
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_desc.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: {'episode_id': episodeId, 'sentence_idx': sentenceIdx},
-    );
-
-    if (response.statusCode != 200) {
-      final data = jsonDecode(response.body);
-      throw HttpStatusError('Fetch Desc', response.statusCode,
-          error: data['error']);
+    try {
+      final response = await httpRequest(
+        '$sentenceId.md',
+        useGet: true,
+        baseUrl: 'https://app.english.libmuy.com/desc',
+        // baseUrl: 'https://english.libmuy.com/app-gh-page/desc',
+      );
+      return response.body;
+    } catch (e) {
+      return null;
     }
-
-    return response.body;
   }
 
   // ======================================================
   // 📄 fetch LEARNING DATA
   // ======================================================
   Future<LearningData?> fetchLearningData(int sentenceId) async {
-    final token = _authProvider.token;
     _log.debug('fetch Learning Data');
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_learning_data.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    final response = await httpRequest(
+      'get_learning_data.php',
+      permitStatus404: true,
       body: jsonEncode({'sentence_id': sentenceId}),
     );
 
-    if (response.statusCode == 404) {
-      return null;
-    }
+    if (response.statusCode == 404) return null;
 
     final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch Learning Data', response.statusCode,
-          error: data['error']);
-    }
-
     return LearningData.fromJson(data);
   }
 
@@ -345,22 +242,10 @@ class LearningProvider {
   // 📄 fetch REVIEW SENTENCE COUNT
   // ======================================================
   Future<ReviewInfo> fetchReviewInfo() async {
-    final token = _authProvider.token;
     _log.debug('fetch Learning Data');
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/get_review_info.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
+    final response = await httpRequest('get_review_info.php');
     final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch Learning Data', response.statusCode,
-          error: data['error']);
-    }
 
     return ReviewInfo.fromJson(data);
   }
@@ -369,25 +254,14 @@ class LearningProvider {
   // 📄 update FAVORITE RESOURCE
   // ======================================================
   Future<void> updateFavoriteResource(ResourceEntity entity, bool fav) async {
-    final token = _authProvider.token;
-
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/update_favorite_resource.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    await httpRequest(
+      'update_favorite_resource.php',
       body: jsonEncode(<String, dynamic>{
         'resource_type': entity.type.toString(),
         'resource_id': entity.id,
         'fav': fav,
       }),
     );
-    if (response.statusCode != 200) {
-      final data = jsonDecode(response.body);
-      throw HttpStatusError('Update Favorite Resource', response.statusCode,
-          error: data['error']);
-    }
 
     if (_favResourceCache != null) {
       final cache = _favResourceCache![entity.type]!;
@@ -401,25 +275,14 @@ class LearningProvider {
   // 📄 add FAVORITE LIST
   // ======================================================
   Future<int> addFavoriteList(String name) async {
-    final token = _authProvider.token;
-
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/add_favorite_list.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    final response = await httpRequest(
+      'add_favorite_list.php',
       body: jsonEncode(<String, dynamic>{
         'name': name,
       }),
     );
 
     final data = jsonDecode(response.body);
-    if (response.statusCode != 200) {
-      throw HttpStatusError('Fetch Desc', response.statusCode,
-          error: data['error']);
-    }
-
     return data['id'];
   }
 
@@ -427,49 +290,25 @@ class LearningProvider {
   // 📄 update FAVORITE LIST
   // ======================================================
   Future<void> updateFavoriteList(int listId, String name) async {
-    final token = _authProvider.token;
-
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/update_favorite_list.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    await httpRequest(
+      'update_favorite_list.php',
       body: jsonEncode(<String, dynamic>{
         'list_id': listId,
         'name': name,
       }),
     );
-
-    if (response.statusCode != 200) {
-      final data = jsonDecode(response.body);
-      throw HttpStatusError('Fetch Desc', response.statusCode,
-          error: data['error']);
-    }
   }
 
   // ======================================================
   // 📄 delete FAVORITE LIST
   // ======================================================
   Future<void> deleteFavoriteList(int listId) async {
-    final token = _authProvider.token;
-
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/update_favorite_list.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    await httpRequest(
+      'update_favorite_list.php',
       body: jsonEncode(<String, dynamic>{
         'list_id': listId,
       }),
     );
-
-    if (response.statusCode != 200) {
-      final data = jsonDecode(response.body);
-      throw HttpStatusError('Fetch Desc', response.statusCode,
-          error: data['error']);
-    }
   }
 
   // ======================================================
@@ -477,29 +316,19 @@ class LearningProvider {
   // ======================================================
   Future<void> updateFavoriteSentence(
       int favoriteListId, Sentence sentence, bool fav) async {
-    final token = _authProvider.token;
-
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/update_favorite_sentence.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    await httpRequest(
+      'update_favorite_sentence.php',
       body: jsonEncode(<String, dynamic>{
         'favorite_list_id': favoriteListId,
         'sentence_id': sentence.id,
         'fav': fav,
       }),
     );
-    if (response.statusCode != 200) {
-      final data = jsonDecode(response.body);
-      throw HttpStatusError('Update Favorite Sentence', response.statusCode,
-          error: data['error']);
-    }
-    
+
     sentence.fav = fav;
     _sentenceCache.forEach((key, val) {
-      if (key.type == SentenceSourceType.favorite && key.favoriteListId == favoriteListId) {
+      if (key.type == SentenceSourceType.favorite &&
+          key.favoriteListId == favoriteListId) {
         if (val.sentences.any((s) => s.id == sentence.id)) {
           if (fav) {
             // If the sentence is already in the list, do nothing
@@ -535,7 +364,6 @@ class LearningProvider {
   // 📄 update HISTORY
   // ======================================================
   Future<void> updateHistory(History history) async {
-    final token = _authProvider.token;
     _log.debug('update history, count:$kHistoryCount');
 
     final args = history.toJson();
@@ -547,20 +375,10 @@ class LearningProvider {
 
     final json = jsonEncode(args);
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/update_history.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    await httpRequest(
+      'update_history.php',
       body: json,
     );
-
-    if (response.statusCode != 200) {
-      final data = jsonDecode(response.body);
-      throw HttpStatusError('Update History', response.statusCode,
-          error: data['error']);
-    }
   }
 
   // ======================================================
@@ -568,7 +386,6 @@ class LearningProvider {
   // ======================================================
   Future<void> removeHistory(
       {SentenceSource? src, bool removeAll = false}) async {
-    final token = _authProvider.token;
     Map<String, dynamic> args;
 
     _log.debug('remove history');
@@ -581,72 +398,53 @@ class LearningProvider {
       args = src.toJson();
     }
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/remove_history.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    await httpRequest(
+      'remove_history.php',
       body: jsonEncode(args),
     );
-
-    if (response.statusCode != 200) {
-      final data = jsonDecode(response.body);
-      throw HttpStatusError('Remove History', response.statusCode,
-          error: data['error']);
-    }
   }
 
   // ======================================================
   // 📄 update Learning Data
   // ======================================================
   Future<void> updateLearningData(LearningData data) async {
-    final token = _authProvider.token;
     final json = data.toJson();
-
     _log.debug('update Learning Data');
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/update_learning_data.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    await httpRequest(
+      'update_learning_data.php',
       body: jsonEncode(json),
     );
-
-    if (response.statusCode != 200) {
-      final json = jsonDecode(response.body);
-      throw HttpStatusError('Fetch Learning Data', response.statusCode,
-          error: json['error']);
-    }
   }
 
   // ======================================================
   // 📄 review Sentence
   // ======================================================
   Future<void> reviewSentence(int sentenceId, ReviewResult reviewResult) async {
-    final token = _authProvider.token;
-
     _log.debug('review Sentence');
 
-    final response = await http.post(
-      Uri.parse('$kUrlPrefix/review_sentence.php'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    await httpRequest(
+      'review_sentence.php',
       body: jsonEncode({
         'sentence_id': sentenceId,
         'review_result': reviewResult.toString(),
       }),
     );
+  }
 
-    if (response.statusCode != 200) {
-      final json = jsonDecode(response.body);
-      throw HttpStatusError('Fetch Learning Data', response.statusCode,
-          error: json['error']);
-    }
+  // ======================================================
+  // 📄 update SENTENCE DESCRIPTION
+  // ======================================================
+  Future<void> updateSentenceDescription(int sentenceId, String data) async {
+    _log.debug('update Sentence description');
+
+    await httpRequest(
+      'update_desc.php',
+      body: jsonEncode({
+        'sentence_id': sentenceId,
+        'desc': data,
+      }),
+    );
   }
 
   // 🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰

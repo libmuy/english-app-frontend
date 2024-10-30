@@ -1,9 +1,17 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:simple_logging/simple_logging.dart';
 
 import '../domain/entities.dart';
+import '../domain/global.dart';
+import '../providers/auth_provider.dart';
+import '../providers/service_locator.dart';
+import 'errors.dart';
+
+final _authProvider = getIt<AuthProvider>();
 
 void showSnackBar(BuildContext context, String msg) {
   if (!context.mounted) return;
@@ -77,87 +85,117 @@ String formatDateForMySQL(DateTime dateTime) {
   return '$year-$month-$day';
 }
 
-  (double easeFactor, int intervalDays) reviewAlgrithm(
-      LearningData data, ReviewResult result) {
-    const minEaseFactor = 1.3;
-    const maxEaseFactor = 2.5;
-    const maxIntervalDays = 365;
-    const initialIntervals = [1, 3, 7];
-    const graduatedInterval = 14;
+(double easeFactor, int intervalDays) reviewAlgrithm(
+    LearningData data, ReviewResult result) {
+  const minEaseFactor = 1.3;
+  const maxEaseFactor = 2.5;
+  const maxIntervalDays = 365;
+  const initialIntervals = [1, 3, 7];
+  const graduatedInterval = 14;
 
-    double retEaseFactor = data.easeFactor;
-    int retIntervalDays = data.intervalDays;
+  double retEaseFactor = data.easeFactor;
+  int retIntervalDays = data.intervalDays;
 
-    if (!data.isGraduated) {
-      if (result == ReviewResult.again) {
-        retIntervalDays = initialIntervals[0];
-      } else {
-        int currentIndex = initialIntervals.indexOf(data.intervalDays);
-        if (currentIndex < initialIntervals.length - 1) {
-          retIntervalDays = initialIntervals[currentIndex + 1];
-        } else {
-          data.isGraduated = true;
-          retIntervalDays = graduatedInterval;
-        }
-      }
+  if (!data.isGraduated) {
+    if (result == ReviewResult.again) {
+      retIntervalDays = initialIntervals[0];
     } else {
-      switch (result) {
-        case ReviewResult.again:
-          retIntervalDays = 1;
-          retEaseFactor =
-              (data.easeFactor - 0.2).clamp(minEaseFactor, maxEaseFactor);
-          break;
-        case ReviewResult.hard:
-          retIntervalDays = (data.intervalDays * 0.8).round();
-          retEaseFactor =
-              (data.easeFactor - 0.15).clamp(minEaseFactor, maxEaseFactor);
-          break;
-        case ReviewResult.good:
-          retIntervalDays = (data.intervalDays * data.easeFactor).round();
-          break;
-        case ReviewResult.easy:
-          retIntervalDays = (data.intervalDays * 1.3).round();
-          retEaseFactor =
-              (data.easeFactor + 0.15).clamp(minEaseFactor, maxEaseFactor);
-          break;
-        case ReviewResult.skip:
-          data.isSkipped = true;
-          break;
-      }
-    }
-
-    // Handle late reviews
-    final daysLate = DateTime.now().difference(data.learnedDate).inDays - data.intervalDays;
-    if (daysLate > 4) {
-      final newIntervalDays = (data.intervalDays - daysLate / 4).round();
-      final limit = (data.intervalDays / 3).round();
-      if (newIntervalDays < limit) {
-        retIntervalDays = limit;
+      int currentIndex = initialIntervals.indexOf(data.intervalDays);
+      if (currentIndex < initialIntervals.length - 1) {
+        retIntervalDays = initialIntervals[currentIndex + 1];
       } else {
-        retIntervalDays = newIntervalDays;
+        data.isGraduated = true;
+        retIntervalDays = graduatedInterval;
       }
     }
-
-    // Apply interval randomization
-    final randomFactor = 1 + (Random().nextDouble() * 0.1 - 0.05);
-    retIntervalDays = (data.intervalDays * randomFactor).round();
-
-    // Ensure interval does not exceed maximum
-    retIntervalDays = data.intervalDays.clamp(1, maxIntervalDays);
-
-    // Leech management
-    if (data.failureCount >= 5) {
-      // Mark for extra attention or removal
-      // This can be implemented as needed
+  } else {
+    switch (result) {
+      case ReviewResult.again:
+        retIntervalDays = 1;
+        retEaseFactor =
+            (data.easeFactor - 0.2).clamp(minEaseFactor, maxEaseFactor);
+        break;
+      case ReviewResult.hard:
+        retIntervalDays = (data.intervalDays * 0.8).round();
+        retEaseFactor =
+            (data.easeFactor - 0.15).clamp(minEaseFactor, maxEaseFactor);
+        break;
+      case ReviewResult.good:
+        retIntervalDays = (data.intervalDays * data.easeFactor).round();
+        break;
+      case ReviewResult.easy:
+        retIntervalDays = (data.intervalDays * 1.3).round();
+        retEaseFactor =
+            (data.easeFactor + 0.15).clamp(minEaseFactor, maxEaseFactor);
+        break;
+      case ReviewResult.skip:
+        data.isSkipped = true;
+        break;
     }
-
-    return (retEaseFactor, retIntervalDays);
   }
 
+  // Handle late reviews
+  final daysLate =
+      DateTime.now().difference(data.learnedDate).inDays - data.intervalDays;
+  if (daysLate > 4) {
+    final newIntervalDays = (data.intervalDays - daysLate / 4).round();
+    final limit = (data.intervalDays / 3).round();
+    if (newIntervalDays < limit) {
+      retIntervalDays = limit;
+    } else {
+      retIntervalDays = newIntervalDays;
+    }
+  }
+
+  // Apply interval randomization
+  final randomFactor = 1 + (Random().nextDouble() * 0.1 - 0.05);
+  retIntervalDays = (data.intervalDays * randomFactor).round();
+
+  // Ensure interval does not exceed maximum
+  retIntervalDays = data.intervalDays.clamp(1, maxIntervalDays);
+
+  // Leech management
+  if (data.failureCount >= 5) {
+    // Mark for extra attention or removal
+    // This can be implemented as needed
+  }
+
+  return (retEaseFactor, retIntervalDays);
+}
 
 int mapDouble2TinyInt(double min, double max, double value) {
   return ((value - min) / (max - min) * 255).round();
 }
+
 double mapTinyInt2Double(double min, double max, int value) {
   return min + (max - min) * value / 255;
+}
+
+Future<Response> httpRequest(String php,
+    {Object? body,
+    bool permitStatus404 = false,
+    String baseUrl = kUrlPrefix,
+    bool useGet = false}) async {
+  final token = _authProvider.token;
+  final url = Uri.parse('$baseUrl/$php');
+  Response response;
+
+  if (useGet) {
+    response = await get(url, headers: <String, String>{
+    'Authorization': 'Bearer $token',
+  });
+  } else {
+    response = await post(url, headers: <String, String>{
+    'Authorization': 'Bearer $token',
+    'Content-Type': 'application/json',
+  }, body: body);
+  }
+
+  if (permitStatus404 && response.statusCode == 404) {}
+  if (response.statusCode != 200) {
+    final data = jsonDecode(response.body);
+    throw HttpStatusError(php, response.statusCode, error: data['error']);
+  }
+
+  return response;
 }

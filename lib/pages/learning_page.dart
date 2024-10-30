@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:libmuyenglish/pages/desc_edit_page.dart';
 
-import 'learning_page_state.dart';
+import 'learning_page_ploc.dart';
 import '../utils/utils.dart';
 import '../domain/entities.dart';
 import 'package:simple_logging/simple_logging.dart';
@@ -467,7 +468,7 @@ class _LearningPageState extends State<LearningPage> {
         ),
         child: MarkdownBody(
           data: desc,
-          styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)),
+          styleSheet: _markdownStyleSheet(context),
         ),
       ),
     ];
@@ -571,11 +572,18 @@ class _LearningPageState extends State<LearningPage> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-                  child: Center(
-                    child: Text(
-                      text,
-                      style: const TextStyle(fontSize: 22, color: Colors.white),
-                    ),
+                  child: Wrap(
+                    direction: Axis.horizontal,
+                    children: text
+                        .split('')
+                        .map((e) => Text(
+                              e,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  // color: color
+                                  fontSize: 20),
+                            ))
+                        .toList(),
                   ),
                 ),
               ),
@@ -606,11 +614,61 @@ class _LearningPageState extends State<LearningPage> {
         });
   }
 
+  MarkdownStyleSheet _markdownStyleSheet(BuildContext context) {
+    // Define a custom MarkdownStyleSheet
+    final fontColor = Theme.of(context).primaryColor;
+    // final markdownStyleSheet = MarkdownStyleSheet(
+    //   p: TextStyle(color: fontColor), // Set the text color to black
+    //   h1: TextStyle(color: fontColor),
+    //   h2: TextStyle(color: fontColor),
+    //   h3: TextStyle(color: fontColor),
+    //   h4: TextStyle(color: fontColor),
+    //   h5: TextStyle(color: fontColor),
+    //   h6: TextStyle(color: fontColor),
+    //   listBullet: TextStyle(color: fontColor),
+    // );
+    return MarkdownStyleSheet(
+      p: Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
+      h1: Theme.of(context).textTheme.headlineLarge!.copyWith(color: fontColor),
+      h2: Theme.of(context)
+          .textTheme
+          .headlineMedium!
+          .copyWith(color: fontColor),
+      h3: Theme.of(context).textTheme.headlineSmall!.copyWith(color: fontColor),
+      h4: Theme.of(context).textTheme.headlineSmall!.copyWith(color: fontColor),
+      h5: Theme.of(context).textTheme.headlineSmall!.copyWith(color: fontColor),
+      h6: Theme.of(context).textTheme.headlineSmall!.copyWith(color: fontColor),
+      blockquote:
+          Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
+      code: Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
+      strong:
+          Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
+      em: Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
+      del: Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
+    );
+  }
+
   Widget _buildBody(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
+          if (ploc.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.description),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (context) => DescEditPage(
+                          sentenceId: ploc.currentSentence!.id,
+                          styleSheet: _markdownStyleSheet(context))),
+                );
+              },
+            ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _openSettingsPage,
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _openSettingsPage,

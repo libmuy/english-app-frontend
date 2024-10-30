@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:libmuy_audioplayer/libmuy_audioplayer.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
+import '../providers/auth_provider.dart';
 import '../providers/history.dart';
 import '../utils/utils.dart';
 import '../providers/service_locator.dart';
@@ -30,6 +31,7 @@ class LearningPagePloc {
   final HistoryManager _historyMgr = getIt<HistoryManager>();
   final _audioPlayer = getIt<LibmuyAudioplayer>();
   late final StreamSubscription _audioPlayerPosSub;
+  final _authProvider = getIt<AuthProvider>();
 
   late void Function(VoidCallback) _setState;
   SentenceFetchResult? _fetchResult;
@@ -52,10 +54,12 @@ class LearningPagePloc {
   List<PageData>? pages;
 
   List<Sentence>? get sentences => _fetchResult?.sentences;
+  Sentence? get currentSentence => _fetchResult?.sentences[index];
   int? get sentenceCount => _fetchResult?.totalCount;
   int? get sentenceOffset => _fetchResult?.offset;
   AppSettings get settings => _settingProvider.settings;
   ValueNotifier<String> get countDownStr => _countDownStr;
+  bool get isAdmin => _authProvider.isAdmin;
 
   void init(SentenceSource sentenceSrc, String title, int? audioLength,
       void Function(VoidCallback) setState) {
@@ -78,8 +82,17 @@ class LearningPagePloc {
   void saveSettings() => _settingProvider.saveSettings();
 
   Future<void> fetchDesc(Sentence sentence) async {
-    sentence.desc ??= await _learningProvider.fetchDescription(
-          sentence.episodeId, sentence.sentenceIdx);
+    int retry = 3;
+    while (retry-- > 0) {
+      _log.debug('fetching description');
+      try {
+        sentence.desc ??= await _learningProvider.fetchDescription(sentence.id);
+        if (sentence.desc != null) break;
+      } catch (e) {
+        _log.warning('Error fetching description: $e');
+      }
+      await Future.delayed(Duration(milliseconds: 500));
+    }
   }
 
   Future<void> _loadAudioIfNeed(int episodeId) async {
