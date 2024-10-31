@@ -9,9 +9,11 @@ import '../domain/entities.dart';
 import '../domain/global.dart';
 import '../providers/auth_provider.dart';
 import '../providers/service_locator.dart';
+import '../providers/setting_provider.dart';
 import 'errors.dart';
 
 final _authProvider = getIt<AuthProvider>();
+final _settingProvider = getIt<SettingProvider>();
 
 void showSnackBar(BuildContext context, String msg) {
   if (!context.mounted) return;
@@ -189,6 +191,10 @@ Future<Response> httpRequest(String php,
     'Authorization': 'Bearer $token',
     'Content-Type': 'application/json',
   }, body: body);
+  }
+  if (response.statusCode == 401) {
+    _authProvider.logout();
+    _settingProvider.resetSettings();
   }
 
   if (permitStatus404 && response.statusCode == 404) {}
