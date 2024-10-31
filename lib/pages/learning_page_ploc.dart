@@ -82,7 +82,7 @@ class LearningPagePloc {
   void saveSettings() => _settingProvider.saveSettings();
 
   Future<void> fetchDesc(Sentence sentence) async {
-    int retry = 3;
+    int retry = 5;
     while (retry-- > 0) {
       _log.debug('fetching description');
       try {
@@ -91,7 +91,7 @@ class LearningPagePloc {
       } catch (e) {
         _log.warning('Error fetching description: $e');
       }
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(Duration(milliseconds: 100));
     }
   }
 

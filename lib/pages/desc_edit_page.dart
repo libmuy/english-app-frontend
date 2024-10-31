@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:libmuyenglish/domain/entities.dart';
 import 'package:libmuyenglish/providers/learning_provider.dart';
 
 import '../providers/service_locator.dart';
 
 class DescEditPage extends StatefulWidget {
-  const DescEditPage({super.key, required this.sentenceId, required this.styleSheet});
-  final int sentenceId;
+  const DescEditPage({super.key, required this.sentence, required this.styleSheet});
+  final Sentence sentence;
   final MarkdownStyleSheet styleSheet;
 
   @override
@@ -22,9 +23,9 @@ class _DescEditPageState extends State<DescEditPage> {
       _markdownData = _controller.text;
     });
   }
-  void _uploadMarkdown() {
+  void _uploadMarkdown() async {
     final learningProvider = getIt<LearningProvider>();
-    learningProvider.updateSentenceDescription(widget.sentenceId, _controller.text);
+    await learningProvider.updateSentenceDescription(widget.sentence.id, _controller.text);
     Navigator.of(context).pop();
   }
 

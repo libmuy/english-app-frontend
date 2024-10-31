@@ -660,9 +660,13 @@ class _LearningPageState extends State<LearningPage> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                       builder: (context) => DescEditPage(
-                          sentenceId: ploc.currentSentence!.id,
+                          sentence: ploc.currentSentence!,
                           styleSheet: _markdownStyleSheet(context))),
-                );
+                ).then((_) {
+                  setState(() {
+                    ploc.currentSentence!.haveDesc = true;
+                  });
+                });
               },
             ),
           IconButton(
