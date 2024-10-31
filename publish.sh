@@ -8,8 +8,8 @@
 flutter build web && \
 cd gh-pages && \
 git pull && \
-rm -rf app/* && \
-cp -r ../build/web/* app/ && \
+rm -rf docs/* && \
+cp -r ../build/web/* docs/ && \
 git add --all && \
 git commit -m "Publishing to gh-pages" && \
 git push origin
