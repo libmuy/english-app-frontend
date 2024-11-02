@@ -195,6 +195,7 @@ Future<Response> httpRequest(String php,
   if (response.statusCode == 401) {
     _authProvider.logout();
     _settingProvider.resetSettings();
+    return response;
   }
 
   if (permitStatus404 && response.statusCode == 404) {}
