@@ -642,9 +642,10 @@ class _LearningPageState extends State<LearningPage> {
           Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
       code: Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
       strong:
-          Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
-      em: Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
+          Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor, fontWeight: FontWeight.bold),
+      em: Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor, fontWeight: FontWeight.bold),
       del: Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor),
+      listBullet: Theme.of(context).textTheme.bodyMedium!.copyWith(color: fontColor, fontWeight: FontWeight.bold),
     );
   }
 
@@ -669,10 +670,6 @@ class _LearningPageState extends State<LearningPage> {
                 });
               },
             ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _openSettingsPage,
-          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _openSettingsPage,
