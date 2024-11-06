@@ -115,6 +115,7 @@ class LearningPagePloc {
       index = 0;
     } else {
       index = sentences!.indexWhere((s) => s.id == lastSentenceId);
+      _log.debug('lastSentenceId: $lastSentenceId, index: $index');
       if (index == -1) index = 0;
     }
     // _fetchLearningData();
@@ -139,6 +140,7 @@ class LearningPagePloc {
         title: _title);
 
     _historyMgr.addOrUpdateHistory(history);
+    _log.debug('update history, sentenceId: ${sentences![index].id}, index: $index');
   }
 
   void _audioPositionListener(Duration pos) {
@@ -280,8 +282,8 @@ class LearningPagePloc {
 
   void onPageChanged(int i) {
     stopAudio();
-    updateHistory();
     index = i;
+    updateHistory();
     // state.pages![index].textController!.clear();
     if (settings.isAutoPlayAfterSwitch) playAudio();
   }
