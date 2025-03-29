@@ -8,7 +8,7 @@ import '../domain/global.dart';
 import 'service_locator.dart';
 import 'setting_provider.dart';
 
-const _kExpiryDuration = Duration(days: 7);
+const _kExpiryDuration = Duration(days: 60);
 
 
 class AuthProvider {

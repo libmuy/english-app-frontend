@@ -3,7 +3,6 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:libmuyenglish/providers/service_locator.dart';
 import 'package:libmuyenglish/utils/errors.dart';
 import 'package:libmuyenglish/utils/utils.dart';
