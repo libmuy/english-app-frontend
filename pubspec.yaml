@@ -22,15 +22,19 @@ dependencies:
   flutter_markdown: ^0.7.3
   # just_audio: ^0.9.39
   libmuy_audioplayer:
-    path: ./libmuy_audioplayer
+    path: ../libmuy_audioplayer
   get_it: ^8.0.0
   flutter_colorpicker: ^1.1.0
   simple_logging: ^1.0.0
+  flutter_cache_manager: ^3.4.1
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ">=3.0.0"
+
+  flutter_launcher_icons: "^0.14.3"
 
 
 # The following section is specific to Flutter packages.
@@ -49,3 +53,8 @@ flutter:
     - family: AlibabaHealth
       fonts:
         - asset: assets/fonts/AlibabaHealthFont2.0CN-45R.ttf
+
+
+flutter_launcher_icons:
+  ios: true
+  image_path: "assets/icons/icon512.png"
