@@ -11,11 +11,14 @@ import 'package:simple_logging/simple_logging.dart';
 import 'auth_provider.dart';
 import '../domain/entities.dart';
 import '../domain/global.dart';
+import 'cache_provider.dart';
 
 final _log = Logger('LearningProvider', level: LogLevel.debug);
 
 class LearningProvider {
   late AuthProvider _authProvider;
+  late CacheProvider _cacheProvider;
+
   final List<Category> _categories = [];
   List<Course> favoriteCourses = [];
   List<Episode> favoriteEpisodes = [];
@@ -26,13 +29,13 @@ class LearningProvider {
 
   ValueNotifier<bool> get fetchingNotifier => _fetchingNotifier;
   bool get fetching => _fetchingNotifier.value;
-  final LinkedHashMap<int, Uint8List> _audioCache = LinkedHashMap();
   final LinkedHashMap<SentenceSource, SentenceFetchResult> _sentenceCache =
       LinkedHashMap();
   Map<ResourceType, List<ResourceEntity>>? _favResourceCache;
 
   LearningProvider() {
     _authProvider = getIt<AuthProvider>();
+    _cacheProvider = getIt<CacheProvider>();
   }
 
   List<Category> get categories => _categories;
@@ -42,6 +45,12 @@ class LearningProvider {
   // 📄 fetch CATEGORY
   // ======================================================
   Future<Category> fetchCategory(int? categoryId) async {
+    final cacheKey = 'category_$categoryId';
+    final cachedData = await _cacheProvider.fetch(cacheKey);
+    if (cachedData != null) {
+      return Category.fromJson(jsonDecode(utf8.decode(cachedData)));
+    }
+
     final response = await httpRequest(
       'get_category.php',
       body: jsonEncode({
@@ -53,6 +62,9 @@ class LearningProvider {
     final ret = Category.fromJson(data);
     await fetchFavoriteResource();
     _updateResourceFav(ret);
+
+    // Cache the response
+    await _cacheProvider.add(cacheKey, Uint8List.fromList(response.bodyBytes));
     return ret;
   }
 
@@ -78,9 +90,10 @@ class LearningProvider {
   // 📄 fetch AUDIO
   // ======================================================
   Future<Uint8List> fetchAudio(int episodeId) async {
-    // Check if the audio is already cached
-    if (_audioCache.containsKey(episodeId)) {
-      return _audioCache[episodeId]!;
+    final cacheKey = 'audio_$episodeId';
+    final cachedData = await _cacheProvider.fetch(cacheKey, isBigData: true);
+    if (cachedData != null) {
+      return cachedData;
     }
 
     final response = await httpRequest(
@@ -90,10 +103,8 @@ class LearningProvider {
       }),
     );
 
-    // Store in cache
-    _addDataToCache(
-        _audioCache, episodeId, response.bodyBytes, kMaxAudioCacheCount);
-
+    // Cache the audio data
+    await _cacheProvider.add(cacheKey, response.bodyBytes, isBigData: true);
     return response.bodyBytes;
   }
 
@@ -103,6 +114,7 @@ class LearningProvider {
   Future<Map<ResourceType, List<ResourceEntity>>>
       fetchFavoriteResource() async {
     if (_favResourceCache != null) return _favResourceCache!;
+
 
     final response = await httpRequest('get_favorite_resource.php');
 
@@ -146,6 +158,13 @@ class LearningProvider {
   // ======================================================
   Future<SentenceFetchResult> fetchSentences(SentenceSource src,
       {int pageSize = kSentencePageSize, int offset = 0}) async {
+    final cacheKey = 'sentence_${src.hashCode}_${pageSize}_$offset';
+    final cachedData = await _cacheProvider.fetch(cacheKey);
+    if (cachedData != null) {
+      return SentenceFetchResult.fromJson(
+          jsonDecode(utf8.decode(cachedData)));
+    }
+
     if (_sentenceCache.containsKey(src)) return _sentenceCache[src]!;
 
     final srcData = src.toJson();
@@ -159,9 +178,8 @@ class LearningProvider {
     final data = jsonDecode(response.body);
     final ret = SentenceFetchResult.fromJson(data);
 
-    // Store in cache
-    _addDataToCache(_sentenceCache, src, ret, kMaxSentenceCacheCount);
-
+    // Cache the response
+    await _cacheProvider.add(cacheKey, Uint8List.fromList(response.bodyBytes));
     return ret;
   }
 
@@ -449,16 +467,6 @@ class LearningProvider {
   // 🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰
   //　Utils for doing some common work
   // 🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰🧰
-  // ======================================================
-  // 📄 Add new audio to the cache, maintaining max cache size
-  // ======================================================
-  void _addDataToCache(LinkedHashMap cache, key, data, int max) {
-    cache[key] = data;
-    if (cache.length >= max) {
-      // Remove the oldest entry
-      cache.remove(cache.keys.first);
-    }
-  }
 
   // ======================================================
   // 📄 check if a resource is favorited

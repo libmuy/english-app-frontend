@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-// import 'package:libmuyenglish/pages/test_page.dart';
+import '../providers/service_locator.dart';
 import '../pages/home_page.dart';
 import '../pages/category_page.dart';
 import '../pages/favorites_page.dart';
 import '../pages/setting_page.dart';
+import '../utils/snack_bar_service.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -15,12 +18,35 @@ class BottomNavBar extends StatefulWidget {
 class BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
   static const List<Widget> _pages = <Widget>[
-    // TestPage(),
     HomePage(),
     CategoryPage(),
     FavoritePage(),
     SettingPage(),
   ];
+
+  final SnackBarService _snackBarService = getIt<SnackBarService>();
+  late final StreamSubscription<String> _snackBarSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen to SnackBarService
+    _snackBarSubscription = _snackBarService.snackBarStream.listen((message) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Cancel the subscription when the widget is disposed
+    _snackBarSubscription.cancel();
+    super.dispose();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -35,10 +61,6 @@ class BottomNavBarState extends State<BottomNavBar> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.check),
-          //   label: 'Test',
-          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',

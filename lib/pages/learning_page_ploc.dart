@@ -202,7 +202,7 @@ class LearningPagePloc {
       _audioPlayer.seek(_playStartTime);
       if (_audioPlayer.speed != playbackSpeed) {
         _log.verbose('  set playback speed to $playbackSpeed');
-        _audioPlayer.speed = playbackSpeed;
+        await _audioPlayer.setSpeed(playbackSpeed);
       }
       _log.verbose('  start to play');
       _audioPlayer.play();
@@ -272,7 +272,7 @@ class LearningPagePloc {
   }
 
   void onPlaySpeedChanged(double value) {
-    _audioPlayer.speed = value;
+    _audioPlayer.setSpeed(value);
     if (_settingSaveTimer != null) _settingSaveTimer?.cancel();
     _settingSaveTimer = Timer(_kSaveSettingDelay, () {
       _settingProvider.saveSettings();

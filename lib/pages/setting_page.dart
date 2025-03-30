@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:libmuyenglish/domain/global.dart';
 import 'package:libmuyenglish/providers/auth_provider.dart';
+import 'package:libmuyenglish/providers/cache_provider.dart';
 import '../widgets/setting_group.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../providers/service_locator.dart';
@@ -102,6 +103,26 @@ class _SettingPageState extends State<SettingPage> {
                       ],
                     );
                   },
+                );
+              },
+            ),
+          ]),
+          SettingGroup(title: 'Cache Settings', children: [
+            ListTile(
+              title: settingItemTitle(context, 'Clear Data Cache'),
+              onTap: () async {
+                await getIt<CacheProvider>().clear(isBigData: true);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Cache cleared')),
+                );
+              },
+            ),
+            ListTile(
+              title: settingItemTitle(context, 'Clear Info Cache'),
+              onTap: () async {
+                await getIt<CacheProvider>().clear(isBigData: false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Cache cleared')),
                 );
               },
             ),
