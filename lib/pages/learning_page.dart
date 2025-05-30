@@ -80,12 +80,12 @@ class _LearningPageState extends State<LearningPage> {
             border: Border.all(color: Theme.of(context).colorScheme.primary),
             borderRadius: const BorderRadius.all(Radius.circular(5)),
           ),
-          child: Text(
+          child: SelectableText(
             text,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontFamily: font,
                 fontSize: ploc.settings.fontSize,
-                color: Theme.of(context).colorScheme.primary),
+                color: Theme.of(context).colorScheme.primary), // You can customize selection controls if needed
           ),
         ),
       ])
