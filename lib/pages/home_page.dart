@@ -42,7 +42,7 @@ class HomePage extends StatelessWidget {
     final List<Widget> widgetList = [
       Text("Hi! ${getIt<AuthProvider>().userName}",
       style: textStyle),
-      Text("今天学习了${reviewInfo.todayLearnedCount}个句子，还有${reviewInfo.needToReviewCount}个句子需要复习。加油哦！",
+      Text("今天学习了${reviewInfo.learnedCount}个句子，还有${reviewInfo.needToReviewCount}个句子需要复习。加油哦！",
       style: textStyle),
       const SizedBox(height: kPageTopPadding),
       if (reviewInfo.needToReviewCount > 0)
