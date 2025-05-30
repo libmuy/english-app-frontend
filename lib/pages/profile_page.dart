@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../domain/global.dart';
 import '../providers/service_locator.dart';
 import '../providers/auth_provider.dart';
+import './learning_calendar_page.dart'; // Adjust path if necessary
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -129,12 +130,22 @@ class _ProfilePageState extends State<ProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        ElevatedButton( // Button to navigate to Learning Calendar Page
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LearningCalendarPage()),
+            );
+          },
+          child: const Text('View Learning Calendar'),
+        ),
+        const SizedBox(height: 16), // Spacing
         if (_isLoading)
           const Center(child: CircularProgressIndicator())
         else
           ElevatedButton(
             onPressed: () => _update(context),
-            child: const Text('Update'),
+            child: const Text('Update Profile'), // Maybe rename from just "Update"
           ),
         const SizedBox(height: 16),
         TextButton(

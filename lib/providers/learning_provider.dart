@@ -258,10 +258,27 @@ class LearningProvider {
   // ======================================================
   // 📄 fetch REVIEW SENTENCE COUNT
   // ======================================================
-  Future<ReviewInfo> fetchReviewInfo() async {
-    _log.debug('fetch Learning Data');
+  Future<ReviewInfo> fetchReviewInfo({DateTime? date}) async { // Added optional date parameter
+    _log.debug('fetch Review Info Data${date == null ? "" : " for date $date"}'); // Modified log
 
-    final response = await httpRequest('get_review_info.php');
+    Map<String, dynamic> requestBody = {};
+    if (date != null) {
+      // Format date to 'YYYY-MM-DD'
+      String formattedDate = "${date.year.toString().padLeft(4, '0')}-"
+                             "${date.month.toString().padLeft(2, '0')}-"
+                             "${date.day.toString().padLeft(2, '0')}";
+      requestBody['date'] = formattedDate;
+    }
+
+    final response = await httpRequest(
+      'get_review_info.php',
+      // Send body only if it's not empty, otherwise an empty string might be sent
+      // depending on httpRequest implementation.
+      // Assuming httpRequest handles null or empty body appropriately for GET if no body is needed,
+      // or sends an empty JSON {} for POST if that's how it's set up.
+      // For this PHP script, it's likely expecting POST with JSON body.
+      body: jsonEncode(requestBody), 
+    );
     final data = jsonDecode(response.body);
 
     return ReviewInfo.fromJson(data);
@@ -500,14 +517,14 @@ class LearningProvider {
 
 class ReviewInfo {
   final int needToReviewCount;
-  final int todayLearnedCount;
+  final int learnedCount; // Renamed from todayLearnedCount
 
-  ReviewInfo(this.needToReviewCount, this.todayLearnedCount);
+  ReviewInfo(this.needToReviewCount, this.learnedCount); // Renamed parameter
 
   factory ReviewInfo.fromJson(Map<String, dynamic> json) {
     return ReviewInfo(
       json['need_to_review_count'] as int,
-      json['today_learned_count'] as int,
+      json['learned_count'] as int, // Updated to use 'learned_count'
     );
   }
 }
