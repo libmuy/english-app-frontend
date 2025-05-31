@@ -42,28 +42,43 @@ class _LearningCalendarPageState extends State<LearningCalendarPage> {
       _isLoading = true;
     });
 
-    // Determine the range of days to fetch for the given month
-    final firstDayOfMonth = DateTime(monthDate.year, monthDate.month, 1);
-    final lastDayOfMonth = DateTime(monthDate.year, monthDate.month + 1, 0);
-    
-    Map<DateTime, int> newCounts = {};
-
-    for (DateTime day = firstDayOfMonth; 
-         day.isBefore(lastDayOfMonth) || day.isAtSameMomentAs(lastDayOfMonth); 
-         day = day.add(const Duration(days: 1))) {
-      try {
-        final reviewInfo = await _learningProvider.fetchReviewInfo(date: day);
-        if (reviewInfo.learnedCount > 0) {
-          newCounts[_normalizeDate(day)] = reviewInfo.learnedCount;
-        }
-      } catch (e) {
-        // Handle or log error for individual day fetch, if necessary
-        print("Error fetching count for $day: $e");
+    Map<DateTime, int> fetchedMonthData = {};
+    try {
+      // Call the new provider method to get all counts for the month
+      fetchedMonthData = await _learningProvider.fetchMonthlyLearnedCounts(
+        monthDate.year,
+        monthDate.month,
+      );
+    } catch (e) {
+      // Handle or log error for the monthly fetch
+      print("Error fetching counts for month ${monthDate.year}-${monthDate.month}: $e");
+      // Optionally, show a snackbar or error message to the user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading data for ${monthDate.year}-${monthDate.month}.')),
+        );
       }
     }
 
     setState(() {
-      _learnedCounts.addAll(newCounts); // Merge with existing data
+      // Option 1: Replace all counts with the newly fetched month's data.
+      // This is simpler if we don't need to cache previously viewed months.
+      // _learnedCounts = fetchedMonthData;
+
+      // Option 2: Merge fetched data with existing data (caches other months).
+      // This is generally better for UX if users flip between months.
+      // Ensure that data for the current month is updated, not just added to.
+      // The fetchedMonthData contains ALL days for the month from the backend.
+      // So, we can update _learnedCounts by removing old entries for the current month
+      // and then adding the new ones. Or, more simply, just use addAll which
+      // will overwrite existing keys for the current month.
+
+      // Create a new map to avoid modifying the existing one during iteration (if any)
+      // and to ensure proper state update.
+      Map<DateTime, int> newLearnedCounts = Map.from(_learnedCounts);
+      newLearnedCounts.addAll(fetchedMonthData);
+      _learnedCounts = newLearnedCounts;
+
       _isLoading = false;
     });
   }

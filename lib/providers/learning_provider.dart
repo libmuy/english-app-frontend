@@ -69,6 +69,47 @@ class LearningProvider {
   }
 
   // ======================================================
+  // 📄 fetch MONTHLY LEARNING SUMMARY
+  // ======================================================
+  Future<Map<DateTime, int>> fetchMonthlyLearnedCounts(int year, int month) async {
+    _log.debug('fetch Monthly Learned Counts for $year-$month');
+
+    final Map<String, dynamic> requestBody = {
+      'year': year,
+      'month': month,
+    };
+
+    final response = await httpRequest(
+      'get_monthly_learning_summary.php', // New endpoint
+      body: jsonEncode(requestBody),
+    );
+
+    // Assuming the response body is a JSON object like: {"2023-10-01": 5, "2023-10-05": 12}
+    final Map<String, dynamic> data = jsonDecode(response.body);
+
+    final Map<DateTime, int> learnedCountsMap = {};
+    data.forEach((dateString, count) {
+      try {
+        final DateTime date = DateTime.parse(dateString); // Parses YYYY-MM-DD
+        // Normalize to midnight to ensure consistency if time components are ever present
+        final normalizedDate = DateTime(date.year, date.month, date.day);
+        if (count is int) {
+          learnedCountsMap[normalizedDate] = count;
+        } else if (count is String) {
+          learnedCountsMap[normalizedDate] = int.tryParse(count) ?? 0;
+        } else {
+          learnedCountsMap[normalizedDate] = 0; // Default if type is unexpected
+        }
+      } catch (e) {
+        _log.warning('Error parsing date or count for entry "$dateString": $count. Error: $e');
+        // Optionally, rethrow or handle more gracefully
+      }
+    });
+
+    return learnedCountsMap;
+  }
+
+  // ======================================================
   // 📄 fetch COURSE
   // ======================================================
   Future<Course> fetchCourse(int courseId) async {
@@ -277,7 +318,7 @@ class LearningProvider {
       // Assuming httpRequest handles null or empty body appropriately for GET if no body is needed,
       // or sends an empty JSON {} for POST if that's how it's set up.
       // For this PHP script, it's likely expecting POST with JSON body.
-      body: jsonEncode(requestBody), 
+      body: jsonEncode(requestBody),
     );
     final data = jsonDecode(response.body);
 
