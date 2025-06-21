@@ -4,12 +4,14 @@ import 'package:libmuyenglish/utils/errors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:crypto/crypto.dart';
+import 'package:simple_logging/simple_logging.dart';
 import '../domain/global.dart';
 import 'service_locator.dart';
 import 'setting_provider.dart';
 
 const _kExpiryDuration = Duration(days: 60);
 
+final _log = Logger('LearningProvider', level: LogLevel.debug);
 
 class AuthProvider {
   final ValueNotifier<bool> _isLoggedInNotifier = ValueNotifier<bool>(false);
@@ -50,14 +52,15 @@ class AuthProvider {
       _expiryDate = DateTime.parse(expiryDateString);
     }
 
-    _isLoggedInNotifier.value = _token != null &&
-        _expiryDate != null &&
-        _expiryDate!.isAfter(DateTime.now());
+    _isLoggedInNotifier.value = _token != null;
 
     if (_isLoggedInNotifier.value) {
       final settingProvider = getIt<SettingProvider>();
       await settingProvider.loadSettings();
     }
+    _log.info('AuthProvider loaded from preferences: '
+        'isLoggedIn: $_isLoggedInNotifier, token: $_token, '
+        'userName: $_userName, email: $_email, expiryDate: $_expiryDate');
   }
 
   Future<void> login(String usernName, String password) async {
@@ -166,5 +169,6 @@ class AuthProvider {
     await prefs.remove('nonce');
     await prefs.remove('expiryDate');
     _isLoggedInNotifier.value = false;
+    _log.info('Logged out successfully');
   }
 }
