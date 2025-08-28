@@ -204,7 +204,7 @@ class AppTheme {
       iconTheme: IconThemeData(
         color: colorScheme.onPrimary, // Set the back icon color here
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
           elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 import 'package:libmuyenglish/pages/desc_edit_page.dart';
 
 import 'learning_page_ploc.dart';
@@ -37,7 +36,6 @@ class _LearningPageState extends State<LearningPage> {
   bool _showSpeed = false;
   bool _isVisibleDesc = false;
   final bool _isWordSelectVisible = false;
-  final bool _isTextInputVisible = false;
 
   @override
   void initState() {
@@ -70,7 +68,7 @@ class _LearningPageState extends State<LearningPage> {
                 // style: OutlinedButton.styleFrom(
                 //   visualDensity: VisualDensity.compact,
                 //   padding: EdgeInsets.all(0),
-                // side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),),
+                // side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),), 
                 child: const Text('Copy'))
           ],
         ),
@@ -176,33 +174,6 @@ class _LearningPageState extends State<LearningPage> {
           ],
         ),
       )
-    ];
-  }
-
-  List<Widget> _buildTextInput(int pageIndex) {
-    final page = ploc.pages![pageIndex];
-    return [
-      _kSeparator,
-      Text(
-        'Text Input',
-        style: Theme.of(context).textTheme.headlineSmall,
-      ),
-      Container(
-        padding: _kAreaPadding,
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).colorScheme.primary),
-          borderRadius: const BorderRadius.all(Radius.circular(5)),
-        ),
-        child: QuillEditor.basic(
-          configurations: QuillEditorConfigurations(
-            controller: page.textController!,
-            sharedConfigurations: const QuillSharedConfigurations(
-              locale: Locale('en', 'US'),
-            ),
-          ),
-        ),
-      ),
-      _kSeparator,
     ];
   }
 
@@ -495,7 +466,6 @@ class _LearningPageState extends State<LearningPage> {
                 if (page.isVisibleTextCn || ploc.settings.isVisibleTextCn)
                   ..._buildTextContainer(sentence.chinese, 'AlibabaHealth'),
                 if (_isWordSelectVisible) ..._buildWordSelect(i),
-                if (_isTextInputVisible) ..._buildTextInput(i),
                 if (_isVisibleDesc && sentence.desc != null)
                   ..._buildPageSentenceDesc(sentence.desc!),
               ],

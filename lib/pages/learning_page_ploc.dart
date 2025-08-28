@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:libmuy_audioplayer/libmuy_audioplayer.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/history.dart';
@@ -284,7 +283,6 @@ class LearningPagePloc {
     stopAudio();
     index = i;
     updateHistory();
-    // state.pages![index].textController!.clear();
     if (settings.isAutoPlayAfterSwitch) playAudio();
   }
 
@@ -370,7 +368,6 @@ class PageData {
   List<String> shuffledWords = [];
   List<String> englishWords = [];
   String? englishText;
-  QuillController? textController;
   PageData(String sentence) {
     englishText = sentence;
     englishWords = englishText!.split(' ');
@@ -378,36 +375,10 @@ class PageData {
     shuffledWords.shuffle(Random());
   }
 
-  void init() {
-    if (textController != null) return;
-    textController = QuillController.basic();
-    textController!.changes.listen(_textChanged);
-  }
+  void init() {}
 
   void dispose() {
-    textController?.dispose();
-    textController = null;
     englishText = null;
-  }
-
-  void _textChanged(DocChange event) {
-    _log.debug("text changed");
-    final before = Document.fromDelta(event.before).toPlainText();
-    final after = textController!.document.toPlainText();
-    int i;
-    int len = after.length;
-    if (after.isEmpty || englishText!.isEmpty) return;
-    if (before == after) return;
-
-    for (i = 0; i < len && i < englishText!.length; i++) {
-      if (after[i] != englishText![i]) break;
-    }
-
-    final cnt = len - i;
-    if (cnt == 0) return;
-
-    String hex = Colors.red.value.toRadixString(16).padLeft(8, '0');
-    textController!.formatText(i, cnt, ColorAttribute('#${hex.toUpperCase()}'));
   }
 
   int checkOrder() {
